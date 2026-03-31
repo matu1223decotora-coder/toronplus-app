@@ -225,6 +225,72 @@
   function show(el) { if (el) el.classList.remove('hidden'); }
   function hide(el) { if (el) el.classList.add('hidden'); }
 
+  // ===== BGM（ゲーム画面のみ）=====
+  // ファイルは `public/bgm.mp3` を配置してください（相対パスは public/ 起点）
+  var BGM_SRC = 'bgm.mp3';
+  var bgm = null;
+  var bgmWantsToPlay = false; // 再生許可が降りない場合のリトライ用
+  var bgmPlayRetried = false; // 何度もイベントを貼らない
+
+  function ensureBgm() {
+    if (bgm) return;
+    bgm = new Audio(BGM_SRC);
+    bgm.loop = true;
+    bgm.volume = 0.2; // 小音量
+  }
+
+  function retryBgmAfterUserGesture() {
+    if (bgmPlayRetried) return;
+    bgmPlayRetried = true;
+    var onFirstUser = function () {
+      if (!bgmWantsToPlay) return;
+      ensureBgm();
+      if (bgm && typeof bgm.play === 'function') {
+        bgm.play().catch(function () { /* それでも失敗する場合は諦める */ });
+      }
+      window.removeEventListener('touchstart', onFirstUser);
+      window.removeEventListener('click', onFirstUser);
+    };
+    // 一度だけ
+    window.addEventListener('touchstart', onFirstUser, { passive: true });
+    window.addEventListener('click', onFirstUser);
+  }
+
+  function startBgm() {
+    bgmWantsToPlay = true;
+    ensureBgm();
+    if (!bgm) return;
+
+    // 既に再生中なら多重に play() しない
+    if (typeof bgm.paused === 'boolean' && bgm.paused === false) return;
+
+    var p = bgm.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () {
+        // 自動再生がブラウザ制限で弾かれた場合、次のユーザー操作で再試行
+        retryBgmAfterUserGesture();
+      });
+    }
+  }
+
+  function stopBgm() {
+    bgmWantsToPlay = false;
+    bgmPlayRetried = false;
+    if (!bgm) return;
+    bgm.pause();
+    try { bgm.currentTime = 0; } catch (e) { /* ignore */ }
+  }
+
+  function syncBgmWithScreen() {
+    // map-screen が hidden の間はタイトル画面扱いとして停止
+    if (!mapScreen) return;
+    if (mapScreen.classList.contains('hidden')) {
+      stopBgm();
+    } else {
+      if (bgmWantsToPlay) startBgm();
+    }
+  }
+
   function getVillagerAt(r, c) {
     return VILLAGERS.find(function (v) { return v.row === r && v.col === c; });
   }
@@ -991,6 +1057,8 @@
   function startGame() {
     hide(titleScreen);
     show(mapScreen);
+    // タイトル画面では再生せず、ゲーム開始時に再生
+    startBgm();
     if (canvas) {
       canvas.width = CANVAS_WIDTH;
       canvas.height = CANVAS_HEIGHT;
@@ -1051,6 +1119,17 @@
 
   function init() {
     bindElements();
+
+    // 初期状態がタイトル画面なら停止（念のため）
+    syncBgmWithScreen();
+
+    // タイトルへ戻る/戻ったとき（map-screen が hidden になったとき）に停止
+    // （現状は title と map を hidden/unhidden で切り替えるため class 監視で対応）
+    if (titleScreen && mapScreen && typeof MutationObserver !== 'undefined') {
+      var obs = new MutationObserver(function () { syncBgmWithScreen(); });
+      obs.observe(titleScreen, { attributes: true, attributeFilter: ['class'] });
+      obs.observe(mapScreen, { attributes: true, attributeFilter: ['class'] });
+    }
 
     if (btnTalk) btnTalk.addEventListener('click', function () {
       var villager = isAdjacentToVillager();
