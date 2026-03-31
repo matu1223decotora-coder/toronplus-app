@@ -308,6 +308,28 @@
     stopAllBgm();
   }
 
+  // ===== 攻撃SE（とろん君の「作業する」時のみ・BGMと同時再生OK）=====
+  // `public/attack.mp3` を配置してください
+  var ATTACK_SE_SRC = 'attack.mp3';
+  var ATTACK_SE_VOLUME = 0.4;
+  var attackSe = null;
+
+  function ensureAttackSe() {
+    if (attackSe) return;
+    attackSe = new Audio(ATTACK_SE_SRC);
+    attackSe.volume = ATTACK_SE_VOLUME;
+  }
+
+  function playAttackSe() {
+    ensureAttackSe();
+    if (!attackSe) return;
+    try { attackSe.currentTime = 0; } catch (e) { /* ignore */ }
+    var p = attackSe.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { /* 未ロード等は無視 */ });
+    }
+  }
+
   function syncBgmWithScreen() {
     // タイトル画面の間、またはゲーム画面が隠れている間は停止
     // （タイトルに戻る導線が将来的に増えても止まるように title-screen も監視）
@@ -925,6 +947,7 @@
 
   function doWork() {
     var m = currentBattle.monster;
+    playAttackSe();
     var dmg = 10 + Math.floor(Math.random() * 11);
     currentBattle.enemyHp = Math.max(0, currentBattle.enemyHp - dmg);
     battleMsg.textContent = 'とろん君の 作業する！\n' + dmg + 'ダメージ！';
