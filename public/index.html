@@ -33,11 +33,6 @@
       <div class="map-ui">
         <div class="map-ui-left">
           <p class="map-hint" id="map-hint"></p>
-          <div class="action-buttons hidden" id="action-buttons">
-          <button type="button" class="btn-action" id="btn-talk">話す</button>
-          <button type="button" class="btn-action" id="btn-search">調べる</button>
-          <button type="button" class="btn-action btn-cancel" id="btn-cancel-action">やめる</button>
-          </div>
         </div>
         <div class="dpad-wrap" id="dpad-wrap" aria-label="十字キー">
           <div class="dpad" id="dpad">
@@ -55,6 +50,16 @@
         <span class="player-hp">HP <span id="player-hp-num">100</span>/<span id="player-hp-max-num">100</span></span>
       </div>
     </section>
+
+    <div
+      class="action-buttons hidden"
+      id="action-buttons"
+      style="position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 9999;"
+    >
+      <button type="button" class="btn-action" id="btn-talk">話す</button>
+      <button type="button" class="btn-action" id="btn-search">調べる</button>
+      <button type="button" class="btn-action btn-cancel" id="btn-cancel-action">やめる</button>
+    </div>
 
     <div id="dialogue-overlay" class="overlay hidden">
       <div class="dq-window">
