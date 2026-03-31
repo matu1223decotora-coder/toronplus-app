@@ -200,7 +200,7 @@
   var showJobs = false;
   var showCompany = false;
   var showToron = false;
-  var isTalking = false;
+  var mode = 'field'; // 'field' | 'talk' | 'inspect' | 'battle'
   var JOBS = [
     'ハウスクリーニング',
     '草刈り',
@@ -225,9 +225,9 @@
 
   function show(el) { if (el) el.classList.remove('hidden'); }
   function hide(el) { if (el) el.classList.add('hidden'); }
-  function setIsTalking(next) {
-    isTalking = !!next;
-    if (isTalking) {
+  function setMode(nextMode) {
+    mode = nextMode || 'field';
+    if (mode !== 'field') {
       if (actionButtons) actionButtons.classList.add('hidden');
       return;
     }
@@ -726,7 +726,7 @@
   }
 
   function updateActionButtons() {
-    if (isTalking) {
+    if (mode !== 'field') {
       if (actionButtons) actionButtons.classList.add('hidden');
       return;
     }
@@ -764,7 +764,7 @@
       showJobs = false;
       showCompany = false;
       hide(dialogueOverlay);
-      setIsTalking(false);
+      setMode('field');
       drawMap();
       updateActionButtons();
       if (mapHint) mapHint.textContent = '';
@@ -775,7 +775,7 @@
       showCompany = false;
       currentVillager = null;
       hide(dialogueOverlay);
-      setIsTalking(false);
+      setMode('field');
     }
     function appendCloseButton() {
       var closeBtn = document.createElement('button');
@@ -799,7 +799,7 @@
       dialogueChoices.appendChild(contactBtn);
       appendCloseButton();
       show(dialogueOverlay);
-      setIsTalking(true);
+      setMode('talk');
     }
     function renderToronView() {
       dialogueName.textContent = 'とろん君';
@@ -812,7 +812,7 @@
       dialogueChoices.innerHTML = '';
       appendCloseButton();
       show(dialogueOverlay);
-      setIsTalking(true);
+      setMode('talk');
     }
     if (showToron) {
       renderToronView();
@@ -847,7 +847,7 @@
         showToron = false;
         if (companyBody) companyBody.textContent = '屋号：便利屋とろんぷらす\n住所：岐阜県羽島市竹鼻町3006-1\n代表：鉄谷松雄\n\nお問い合わせはLINEからお願いします\n※営業電話はお断りしております\n\n岐阜市周辺対応\n営業時間：8:00〜17:00\n\n地域密着で困りごとを解決する便利屋サービスです。';
         show(companyOverlay);
-        setIsTalking(true);
+        setMode('talk');
       });
       dialogueChoices.appendChild(showJobsBtn);
       dialogueChoices.appendChild(companyBtn);
@@ -876,7 +876,7 @@
     }
     appendCloseButton();
     show(dialogueOverlay);
-    setIsTalking(true);
+    setMode('talk');
   }
 
   function getExpToNextLevel() {
@@ -956,6 +956,7 @@
     updatePlayerStatusDisplay();
     playBattleBgm();
     show(battleOverlay);
+    setMode('battle');
   }
 
   function onEnemyHpChanged(newHp) {
@@ -1240,8 +1241,12 @@
     });
 
     if (btnSearch) btnSearch.addEventListener('click', function () {
+      setMode('inspect');
       var target = getAdjacentSearchTarget();
-      if (!target) return;
+      if (!target) {
+        setMode('field');
+        return;
+      }
       if (target.type === TILE_GRASS_SPOT && activeQuest === 1) { startBattle(1); return; }
       if (target.type === TILE_JUNK_SPOT && activeQuest === 2) { startBattle(2); return; }
       if (target.type === TILE_AC_SPOT && activeQuest === 3) { startBattle(3); return; }
@@ -1256,11 +1261,11 @@
           closeBtn.textContent = '▶ 閉じる';
           closeBtn.addEventListener('click', function () {
             hide(dialogueOverlay);
-            setIsTalking(false);
+            setMode('field');
           });
           dialogueChoices.appendChild(closeBtn);
           show(dialogueOverlay);
-          setIsTalking(true);
+          setMode('talk');
         }
         return;
       }
@@ -1273,11 +1278,11 @@
         closeBtn.textContent = '▶ 閉じる';
         closeBtn.addEventListener('click', function () {
           hide(dialogueOverlay);
-          setIsTalking(false);
+          setMode('field');
         });
         dialogueChoices.appendChild(closeBtn);
         show(dialogueOverlay);
-        setIsTalking(true);
+        setMode('talk');
       }
     });
 
@@ -1291,6 +1296,7 @@
         if (cmd === 'work') doWork();
         if (cmd === 'run') {
           hide(battleOverlay);
+          setMode('field');
           playFieldBgm();
           battleMsg.textContent = '';
           battleCommands.classList.remove('hidden');
@@ -1305,13 +1311,14 @@
     if (btnLine) btnLine.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
     if (btnClearClose) btnClearClose.addEventListener('click', function () {
       hide(clearOverlay);
+      setMode('field');
       updateActionButtons();
       if (mapHint) mapHint.textContent = '';
     });
     if (btnCloseCompany) btnCloseCompany.addEventListener('click', function () {
       showCompany = false;
       hide(companyOverlay);
-      setIsTalking(false);
+      setMode('field');
     });
 
     var btnStart = document.getElementById('btn-start');
@@ -1320,7 +1327,7 @@
     document.addEventListener('keydown', function (e) {
       if (!mapScreen || mapScreen.classList.contains('hidden')) return;
       if (e.key === 'Enter') {
-        if (isNearSign() && (!dialogueOverlay || dialogueOverlay.classList.contains('hidden'))) {
+        if (mode === 'field' && isNearSign() && (!dialogueOverlay || dialogueOverlay.classList.contains('hidden'))) {
           e.preventDefault();
           dialogueName.textContent = '看板';
           dialogueText.textContent = '便利屋とろんぷらすへようこそ！';
@@ -1330,11 +1337,11 @@
           closeBtn.textContent = '▶ 閉じる';
           closeBtn.addEventListener('click', function () {
             hide(dialogueOverlay);
-            setIsTalking(false);
+            setMode('field');
           });
           dialogueChoices.appendChild(closeBtn);
           show(dialogueOverlay);
-          setIsTalking(true);
+          setMode('talk');
           return;
         }
       }
