@@ -234,6 +234,7 @@
   var bgmTarget = 'none'; // 'field' | 'battle' | 'none'
   var bgmRetryBound = false;
   var BGM_VOLUME = 0.2;
+  var killBgmResumeTimer = null;
 
   function ensureBgm() {
     if (!fieldBgm) {
@@ -305,6 +306,10 @@
 
   function stopBgm() {
     bgmTarget = 'none';
+    if (killBgmResumeTimer) {
+      clearTimeout(killBgmResumeTimer);
+      killBgmResumeTimer = null;
+    }
     stopAllBgm();
   }
 
@@ -897,6 +902,10 @@
   }
 
   function startBattle(questId) {
+    if (killBgmResumeTimer) {
+      clearTimeout(killBgmResumeTimer);
+      killBgmResumeTimer = null;
+    }
     var m = MONSTERS[questId];
     var pool = quizData[m.quizKey] || [];
     currentBattle = {
@@ -936,9 +945,20 @@
     var crossedToDead = prevHp > 0 && newHp <= 0;
     if (crossedToDead && !currentBattle.killSePlayed) {
       currentBattle.killSePlayed = true;
+      // 同時再生禁止: 撃破時にバトルBGMを停止
+      if (battleBgm) {
+        battleBgm.pause();
+        try { battleBgm.currentTime = 0; } catch (e) { /* ignore */ }
+      }
       var killSe = new Audio('kill.mp3');
       killSe.volume = 0.5;
       killSe.play().catch(function () { /* ignore */ });
+      // 0.4秒後にフィールドBGMを再開
+      if (killBgmResumeTimer) clearTimeout(killBgmResumeTimer);
+      killBgmResumeTimer = setTimeout(function () {
+        killBgmResumeTimer = null;
+        playFieldBgm();
+      }, 400);
     }
     currentBattle.lastEnemyHp = newHp;
   }
@@ -1002,7 +1022,6 @@
         hide(battleOverlay);
         completedQuests[currentBattle.questId] = true;
         activeQuest = 0;
-        playFieldBgm();
         drawMap();
         showClearOverlay(currentBattle.questId);
       });
