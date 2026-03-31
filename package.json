@@ -1,0 +1,11 @@
+{
+  "name": "toron-game",
+  "version": "1.0.1",
+  "private": true,
+  "scripts": {
+    "start": "serve public -l 3000"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

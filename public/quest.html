@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+  <title>とろんクエスト｜とろん村 トップビューRPG</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
+</head>
+<body class="quest-page">
+  <div class="rpg-game" id="rpg-game">
+    <!-- トップビュー村マップ -->
+    <div class="rpg-map-wrap">
+      <div class="rpg-map" id="rpg-map"></div>
+      <div class="rpg-char" id="rpg-char">🐢</div>
+    </div>
+
+    <!-- 操作ヒント -->
+    <p class="rpg-hint" id="rpg-hint">矢印キーで移動 / マップをタップで移動</p>
+
+    <!-- 会話オーバーレイ（村人） -->
+    <div class="rpg-overlay rpg-dialogue-overlay hidden" id="dialogue-overlay">
+      <div class="dq-window">
+        <p class="dq-name">村人</p>
+        <p class="dq-text" id="dialogue-text">最近庭の草がすごくて困っている…</p>
+        <button class="primary-btn full" id="dialogue-close-btn">閉じる</button>
+      </div>
+    </div>
+
+    <!-- 調べるオーバーレイ（庭・ゴミ山・家） -->
+    <div class="rpg-overlay rpg-action-overlay hidden" id="action-overlay">
+      <div class="dq-window">
+        <p class="dq-text" id="action-message">草が生い茂っている。</p>
+        <button class="primary-btn full" id="action-search-btn">▶ 調べる</button>
+        <button class="ghost-btn full" id="action-cancel-btn">やめる</button>
+      </div>
+    </div>
+
+    <!-- 戦闘オーバーレイ（ドラクエ風） -->
+    <div class="rpg-overlay rpg-battle-overlay hidden" id="battle-overlay">
+      <div class="quest-window battle-window">
+        <div class="quest-battle-header">
+          <span class="quest-player-name">とろん君</span>
+          <span class="quest-stage-label" id="battle-stage-label">草モンスター 討伐</span>
+        </div>
+        <div class="quest-log" id="battle-log">
+          <p class="log-line">草むらから なにかが うごめいている…</p>
+        </div>
+        <div class="quest-monster-area">
+          <div class="quest-monster-card">
+            <div class="quest-monster-top">
+              <span class="quest-monster-name" id="battle-monster-name">草モンスター</span>
+              <span class="quest-monster-hp-text" id="battle-hp-text">HP 100 / 100</span>
+            </div>
+            <div class="quest-monster-visual">
+              <div class="quest-monster-icon quest-monster-grass" id="battle-monster-icon">🌿</div>
+            </div>
+            <div class="quest-hp-bar">
+              <div class="quest-hp-inner" id="battle-hp-inner"></div>
+            </div>
+          </div>
+        </div>
+        <div class="quest-commands">
+          <button class="primary-btn full" id="cmd-attack-normal">▶ 草刈り（20〜30）</button>
+          <button class="primary-btn full" id="cmd-attack-strong">▶ 強力草刈り（40）</button>
+          <button class="primary-btn full" id="cmd-herbicide">▶ 除草剤（大）</button>
+          <button class="ghost-btn full" id="cmd-scout">▶ 調査</button>
+        </div>
+        <button class="ghost-btn full hidden" id="battle-next-btn">▶ つぎへ</button>
+      </div>
+    </div>
+
+    <!-- クエストクリアオーバーレイ -->
+    <div class="rpg-overlay rpg-clear-overlay hidden" id="clear-overlay">
+      <div class="quest-window">
+        <div class="quest-result-header">
+          <span class="quest-clear-badge">クエストクリア！</span>
+          <p class="quest-text">とろん村の困りごとを すべて 解決した！</p>
+        </div>
+        <div class="monster-list">
+          <div class="monster-row">
+            <div class="monster-left">
+              <span class="monster-icon type-grass">🌿</span>
+              <span class="monster-name">草モンスター 討伐</span>
+            </div>
+          </div>
+          <div class="monster-row">
+            <div class="monster-left">
+              <span class="monster-icon type-junk">🪨</span>
+              <span class="monster-name">不用品ゴーレム 討伐</span>
+            </div>
+          </div>
+          <div class="monster-row">
+            <div class="monster-left">
+              <span class="monster-icon type-mold">🦠</span>
+              <span class="monster-name">カビスライム 討伐</span>
+            </div>
+          </div>
+        </div>
+        <div class="estimate-box">
+          <p class="estimate-label">作業費用のめやす</p>
+          <p class="estimate-price">6,000〜15,000円</p>
+        </div>
+        <div class="quest-cta">
+          <button class="line-btn big" id="line-estimate-btn">▶ LINEで無料見積</button>
+        </div>
+        <button class="ghost-btn full" id="quest-retry-btn">▶ もう一度遊ぶ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="line-url.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

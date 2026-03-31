@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#2d5016" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <title>便利屋とろんぷらす｜とろん村クエスト</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet" />
+</head>
+<body class="game-page">
+  <div id="game-root">
+    <section id="title-screen">
+      <div class="title-inner">
+        <h1 class="game-title">便利屋とろんぷらす</h1>
+        <p class="title-quest-name">とろん村クエスト</p>
+        <p class="game-subtitle">〜困りごとモンスターをたおそう〜</p>
+        <p class="title-service-tagline">あなたの街の便利屋サービス</p>
+        <img id="toronImage" class="title-toron" src="assets/toron.png" alt="とろん君" width="220" height="220" decoding="async" />
+        <button type="button" class="btn-start" id="btn-start">▶ はじめる</button>
+        <a class="btn-line-top-fixed" id="btn-line-top" href="#" target="_blank" rel="noopener noreferrer">LINEで相談する</a>
+      </div>
+    </section>
+
+    <section id="map-screen" class="hidden">
+      <div class="map-wrap">
+        <canvas id="game-canvas"></canvas>
+      </div>
+      <div class="map-ui">
+        <div class="map-ui-left">
+          <p class="map-hint" id="map-hint"></p>
+          <div class="action-buttons hidden" id="action-buttons">
+          <button type="button" class="btn-action" id="btn-talk">話す</button>
+          <button type="button" class="btn-action" id="btn-search">調べる</button>
+          <button type="button" class="btn-action btn-cancel" id="btn-cancel-action">やめる</button>
+          </div>
+        </div>
+        <div class="dpad-wrap" id="dpad-wrap" aria-label="十字キー">
+          <div class="dpad" id="dpad">
+            <button type="button" class="dpad-btn dpad-up" data-dir="up">↑</button>
+            <button type="button" class="dpad-btn dpad-left" data-dir="left">←</button>
+            <button type="button" class="dpad-btn dpad-center" aria-hidden="true"> </button>
+            <button type="button" class="dpad-btn dpad-right" data-dir="right">→</button>
+            <button type="button" class="dpad-btn dpad-down" data-dir="down">↓</button>
+          </div>
+        </div>
+      </div>
+      <div class="player-status">
+        <span class="player-lv">Lv<span id="player-lv-num">1</span></span>
+        <span class="player-exp">EXP <span id="player-exp-num">0</span></span>
+        <span class="player-hp">HP <span id="player-hp-num">100</span>/<span id="player-hp-max-num">100</span></span>
+      </div>
+    </section>
+
+    <div id="dialogue-overlay" class="overlay hidden">
+      <div class="dq-window">
+        <p class="dq-name" id="dialogue-name">村人</p>
+        <p class="dq-text" id="dialogue-text"></p>
+        <div class="dq-choices" id="dialogue-choices"></div>
+      </div>
+    </div>
+
+    <div id="company-overlay" class="overlay company-overlay hidden">
+      <div class="dq-window company-window">
+        <p class="dq-name company-title">会社概要</p>
+        <div class="company-body" id="company-body"></div>
+        <div class="dq-choices">
+          <button type="button" class="btn-close-company" id="btn-close-company">▶ 閉じる</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="battle-overlay" class="overlay hidden">
+      <div class="battle-frame">
+        <div class="battle-top">
+          <span class="battle-enemy-name" id="battle-enemy-name">草モンスター</span>
+          <span class="battle-enemy-hp">HP <span id="battle-enemy-hp">100</span>/<span id="battle-enemy-hp-max">100</span></span>
+        </div>
+        <div class="battle-enemy-hp-bar">
+          <div class="battle-enemy-hp-inner" id="battle-enemy-hp-inner"></div>
+        </div>
+        <div class="battle-enemy-area">
+          <img class="battle-enemy-sprite" id="battle-enemy-sprite" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=" alt="" width="180" height="180" decoding="async" />
+          <div class="damage-popup hidden" id="damage-popup">0</div>
+        </div>
+        <div class="battle-player-status">
+          <span class="battle-player-lv">Lv<span id="battle-player-lv">1</span></span>
+          <span class="battle-player-exp">EXP <span id="battle-player-exp">0</span></span>
+          <span class="battle-player-hp">HP <span id="battle-player-hp">100</span>/<span id="battle-player-hp-max">100</span></span>
+        </div>
+        <div class="battle-msg" id="battle-msg"></div>
+        <div class="battle-commands" id="battle-commands">
+          <button type="button" class="battle-cmd" data-cmd="work">▶ 作業する</button>
+          <button type="button" class="battle-cmd" data-cmd="run">▶ スキップ</button>
+        </div>
+        <div class="battle-quiz-choices hidden" id="battle-quiz-choices"></div>
+        <div class="battle-sub-commands hidden" id="battle-sub-commands"></div>
+      </div>
+    </div>
+
+    <div id="clear-overlay" class="overlay hidden">
+      <div class="dq-window clear-window">
+        <p class="dq-name">村人</p>
+        <p class="dq-text" id="clear-message">ありがとう！助かったよ！</p>
+        <p class="dq-text cta-text">現実の世界でも<br />とろん君は便利屋として活動してるんだ</p>
+        <p class="dq-text cta-text">草刈り・掃除・不用品回収など<br />困りごとがあればLINEで相談できるよ</p>
+        <p class="dq-text cta-text">岐阜周辺対応</p>
+        <p class="dq-text cta-text">※相談だけでもOKです</p>
+        <button type="button" class="btn-line" id="btn-line">LINEで相談する（無料）</button>
+        <button type="button" class="btn-ghost" id="btn-clear-close">つづける</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="line-url.js"></script>
+  <script src="map.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
