@@ -905,7 +905,9 @@
       enemyHpMax: m.hp,
       monster: m,
       quizPool: pool,
-      usedQuizIndices: []
+      usedQuizIndices: [],
+      lastEnemyHp: m.hp,
+      killSePlayed: false
     };
     battleEnemyName.textContent = m.name;
     battleEnemyHp.textContent = m.hp;
@@ -928,6 +930,19 @@
     show(battleOverlay);
   }
 
+  function onEnemyHpChanged(newHp) {
+    if (!currentBattle) return;
+    var prevHp = typeof currentBattle.lastEnemyHp === 'number' ? currentBattle.lastEnemyHp : newHp;
+    var crossedToDead = prevHp > 0 && newHp <= 0;
+    if (crossedToDead && !currentBattle.killSePlayed) {
+      currentBattle.killSePlayed = true;
+      var killSe = new Audio('kill.mp3');
+      killSe.volume = 0.5;
+      killSe.play().catch(function () { /* ignore */ });
+    }
+    currentBattle.lastEnemyHp = newHp;
+  }
+
   function showPlayerTurn() {
     battleMsg.textContent = battleMsg.textContent || 'とろん君の ターン！';
     battleCommands.classList.remove('hidden');
@@ -943,6 +958,7 @@
     playAttackSe();
     var dmg = 10 + Math.floor(Math.random() * 11);
     currentBattle.enemyHp = Math.max(0, currentBattle.enemyHp - dmg);
+    onEnemyHpChanged(currentBattle.enemyHp);
     battleMsg.textContent = 'とろん君の 作業する！\n' + dmg + 'ダメージ！';
     battleEnemyHp.textContent = currentBattle.enemyHp;
     if (battleEnemyHpInner) {
@@ -965,9 +981,6 @@
     }, 800);
 
     if (currentBattle.enemyHp <= 0) {
-      var killSe = new Audio('/kill.mp3');
-      killSe.volume = 0.5;
-      killSe.play().catch(function () { /* ignore */ });
       if (battleEnemySprite) battleEnemySprite.classList.add('dead');
       var expGained = EXP_PER_MONSTER[currentBattle.questId] || 10;
       var levelsGained = addExpAndCheckLevelUp(expGained);
