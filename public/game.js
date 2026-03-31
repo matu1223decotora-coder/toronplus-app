@@ -229,6 +229,9 @@
     mode = nextMode || 'field';
     if (mode !== 'field') {
       if (actionButtons) actionButtons.classList.add('hidden');
+      if (btnTalk) btnTalk.classList.add('hidden');
+      if (btnSearch) btnSearch.classList.add('hidden');
+      if (btnCancelAction) btnCancelAction.classList.add('hidden');
       return;
     }
     updateActionButtons();
@@ -726,6 +729,10 @@
   }
 
   function updateActionButtons() {
+    if (battleOverlay && !battleOverlay.classList.contains('hidden')) {
+      setMode('battle');
+      return;
+    }
     if (mode !== 'field') {
       if (actionButtons) actionButtons.classList.add('hidden');
       return;
@@ -952,11 +959,11 @@
     battleQuizChoices.innerHTML = '';
     battleSubCommands.classList.add('hidden');
     battleSubCommands.innerHTML = '';
+    setMode('battle');
     showPlayerTurn();
     updatePlayerStatusDisplay();
     playBattleBgm();
     show(battleOverlay);
-    setMode('battle');
   }
 
   function onEnemyHpChanged(newHp) {
@@ -1326,6 +1333,7 @@
 
     document.addEventListener('keydown', function (e) {
       if (!mapScreen || mapScreen.classList.contains('hidden')) return;
+      if (mode !== 'field') return;
       if (e.key === 'Enter') {
         if (mode === 'field' && isNearSign() && (!dialogueOverlay || dialogueOverlay.classList.contains('hidden'))) {
           e.preventDefault();
@@ -1354,6 +1362,7 @@
     });
 
     function handleDpadDir(dir) {
+      if (mode !== 'field') return;
       if (dir === 'up') move(-1, 0);
       if (dir === 'down') move(1, 0);
       if (dir === 'left') move(0, -1);
