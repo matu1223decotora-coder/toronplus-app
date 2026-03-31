@@ -233,10 +233,7 @@
   var battleBgm = null;
   var bgmTarget = 'none'; // 'field' | 'battle' | 'none'
   var bgmRetryBound = false;
-  var bgmSwitchToken = 0;
   var BGM_VOLUME = 0.2;
-  var BGM_FADE_STEP = 0.02;
-  var BGM_FADE_MS = 50;
 
   function ensureBgm() {
     if (!fieldBgm) {
@@ -253,108 +250,15 @@
 
   function stopAllBgm() {
     if (fieldBgm) {
-      if (fieldBgm.__fadeTimer) {
-        clearInterval(fieldBgm.__fadeTimer);
-        fieldBgm.__fadeTimer = null;
-      }
       fieldBgm.pause();
       try { fieldBgm.currentTime = 0; } catch (e) { /* ignore */ }
       fieldBgm.volume = BGM_VOLUME;
     }
     if (battleBgm) {
-      if (battleBgm.__fadeTimer) {
-        clearInterval(battleBgm.__fadeTimer);
-        battleBgm.__fadeTimer = null;
-      }
       battleBgm.pause();
       try { battleBgm.currentTime = 0; } catch (e) { /* ignore */ }
       battleBgm.volume = BGM_VOLUME;
     }
-  }
-
-  function fadeOut(audio, token) {
-    return new Promise(function (resolve) {
-      if (!audio) { resolve(); return; }
-      if (audio.__fadeTimer) {
-        clearInterval(audio.__fadeTimer);
-        audio.__fadeTimer = null;
-      }
-      var volume = typeof audio.volume === 'number' ? audio.volume : BGM_VOLUME;
-      audio.__fadeTimer = setInterval(function () {
-        if (token !== bgmSwitchToken) {
-          clearInterval(audio.__fadeTimer);
-          audio.__fadeTimer = null;
-          resolve();
-          return;
-        }
-        if (volume > BGM_FADE_STEP) {
-          volume = Math.max(0, volume - BGM_FADE_STEP);
-          audio.volume = volume;
-        } else {
-          audio.pause();
-          try { audio.currentTime = 0; } catch (e) { /* ignore */ }
-          audio.volume = BGM_VOLUME;
-          clearInterval(audio.__fadeTimer);
-          audio.__fadeTimer = null;
-          resolve();
-        }
-      }, BGM_FADE_MS);
-    });
-  }
-
-  function fadeIn(audio, token) {
-    return new Promise(function (resolve) {
-      if (!audio) { resolve(); return; }
-      if (audio.__fadeTimer) {
-        clearInterval(audio.__fadeTimer);
-        audio.__fadeTimer = null;
-      }
-      var volume = 0;
-      audio.volume = 0;
-      try { audio.currentTime = 0; } catch (e) { /* ignore */ }
-      var playPromise = audio.play();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(function () {
-          if (token === bgmSwitchToken) bindBgmRetryAfterUserGesture();
-          if (audio.__fadeTimer) {
-            clearInterval(audio.__fadeTimer);
-            audio.__fadeTimer = null;
-          }
-          resolve();
-        });
-      }
-      audio.__fadeTimer = setInterval(function () {
-        if (token !== bgmSwitchToken) {
-          clearInterval(audio.__fadeTimer);
-          audio.__fadeTimer = null;
-          resolve();
-          return;
-        }
-        if (volume < BGM_VOLUME - 0.001) {
-          volume = Math.min(BGM_VOLUME, volume + BGM_FADE_STEP);
-          audio.volume = volume;
-        } else {
-          audio.volume = BGM_VOLUME;
-          clearInterval(audio.__fadeTimer);
-          audio.__fadeTimer = null;
-          resolve();
-        }
-      }, BGM_FADE_MS);
-    });
-  }
-
-  function switchBgm(nextTarget) {
-    bgmTarget = nextTarget;
-    ensureBgm();
-    bgmSwitchToken += 1;
-    var token = bgmSwitchToken;
-    var from = nextTarget === 'battle' ? fieldBgm : battleBgm;
-    var to = nextTarget === 'battle' ? battleBgm : fieldBgm;
-    // 同時再生禁止: 先に fadeOut を完了してから fadeIn
-    fadeOut(from, token).then(function () {
-      if (token !== bgmSwitchToken || bgmTarget !== nextTarget) return;
-      return fadeIn(to, token);
-    });
   }
 
   function bindBgmRetryAfterUserGesture() {
@@ -370,11 +274,33 @@
   }
 
   function playFieldBgm() {
-    switchBgm('field');
+    bgmTarget = 'field';
+    ensureBgm();
+    if (!fieldBgm || !battleBgm) return;
+    // 同時再生禁止: battle を停止してから field を再生
+    battleBgm.pause();
+    try { battleBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    try { fieldBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    fieldBgm.volume = BGM_VOLUME;
+    var p = fieldBgm.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { bindBgmRetryAfterUserGesture(); });
+    }
   }
 
   function playBattleBgm() {
-    switchBgm('battle');
+    bgmTarget = 'battle';
+    ensureBgm();
+    if (!fieldBgm || !battleBgm) return;
+    // 同時再生禁止: field を停止してから battle を再生
+    fieldBgm.pause();
+    try { fieldBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    try { battleBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    battleBgm.volume = BGM_VOLUME;
+    var p = battleBgm.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { bindBgmRetryAfterUserGesture(); });
+    }
   }
 
   function stopBgm() {
