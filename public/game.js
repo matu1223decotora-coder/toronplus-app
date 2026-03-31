@@ -200,7 +200,7 @@
   var showJobs = false;
   var showCompany = false;
   var showToron = false;
-  var mode = 'field'; // 'field' | 'talk' | 'inspect' | 'battle'
+  var mode = 'field'; // 'field' | 'talk' | 'inspect' | 'battle' | 'ending'
   var JOBS = [
     'ハウスクリーニング',
     '草刈り',
@@ -222,11 +222,14 @@
   var battleMsg, battleCommands, battleQuizChoices, battleSubCommands;
   var clearOverlay, clearMessage, btnLine, btnClearClose;
   var companyOverlay, companyBody, btnCloseCompany;
+  var endingOverlay, endingRoll, endingCta, btnEndingLine, btnEndingRequest;
+  var endingCtaTimer = null;
 
   function show(el) { if (el) el.classList.remove('hidden'); }
   function hide(el) { if (el) el.classList.add('hidden'); }
   function setMode(nextMode) {
     mode = nextMode || 'field';
+    if (mode !== 'ending' && endingOverlay) hide(endingOverlay);
     if (mode !== 'field') {
       if (actionButtons) actionButtons.classList.add('hidden');
       if (btnTalk) btnTalk.classList.add('hidden');
@@ -1050,6 +1053,10 @@
         completedQuests[currentBattle.questId] = true;
         activeQuest = 0;
         drawMap();
+        if (hasClearedAllQuests()) {
+          showEndingOverlay();
+          return;
+        }
         showClearOverlay(currentBattle.questId);
       });
       battleSubCommands.appendChild(nextBtn);
@@ -1159,6 +1166,33 @@
     show(clearOverlay);
   }
 
+  function hasClearedAllQuests() {
+    return !!completedQuests[1] && !!completedQuests[2] && !!completedQuests[3];
+  }
+
+  function showEndingOverlay() {
+    if (endingCtaTimer) {
+      clearTimeout(endingCtaTimer);
+      endingCtaTimer = null;
+    }
+    setMode('ending');
+    hide(clearOverlay);
+    hide(dialogueOverlay);
+    hide(companyOverlay);
+    hide(battleOverlay);
+    show(endingOverlay);
+    if (endingCta) hide(endingCta);
+    if (endingRoll) {
+      endingRoll.style.animation = 'none';
+      endingRoll.offsetHeight;
+      endingRoll.style.animation = '';
+    }
+    endingCtaTimer = setTimeout(function () {
+      endingCtaTimer = null;
+      if (endingCta) show(endingCta);
+    }, 5000);
+  }
+
   function startGame() {
     hide(titleScreen);
     show(mapScreen);
@@ -1220,6 +1254,11 @@
     companyOverlay = document.getElementById('company-overlay');
     companyBody = document.getElementById('company-body');
     btnCloseCompany = document.getElementById('btn-close-company');
+    endingOverlay = document.getElementById('ending-overlay');
+    endingRoll = document.getElementById('ending-roll');
+    endingCta = document.getElementById('ending-cta');
+    btnEndingLine = document.getElementById('btn-ending-line');
+    btnEndingRequest = document.getElementById('btn-ending-request');
   }
 
   function init() {
@@ -1316,6 +1355,8 @@
     });
 
     if (btnLine) btnLine.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
+    if (btnEndingLine) btnEndingLine.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
+    if (btnEndingRequest) btnEndingRequest.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
     if (btnClearClose) btnClearClose.addEventListener('click', function () {
       hide(clearOverlay);
       setMode('field');
