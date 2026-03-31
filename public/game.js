@@ -200,6 +200,7 @@
   var showJobs = false;
   var showCompany = false;
   var showToron = false;
+  var isTalking = false;
   var JOBS = [
     'ハウスクリーニング',
     '草刈り',
@@ -224,6 +225,14 @@
 
   function show(el) { if (el) el.classList.remove('hidden'); }
   function hide(el) { if (el) el.classList.add('hidden'); }
+  function setIsTalking(next) {
+    isTalking = !!next;
+    if (isTalking) {
+      if (actionButtons) actionButtons.classList.add('hidden');
+      return;
+    }
+    updateActionButtons();
+  }
 
   // ===== BGM（フィールド/バトル切替）=====
   // ファイルは `public/bgm.mp3` と `public/battle.mp3` を配置してください
@@ -717,6 +726,10 @@
   }
 
   function updateActionButtons() {
+    if (isTalking) {
+      if (actionButtons) actionButtons.classList.add('hidden');
+      return;
+    }
     var villager = isAdjacentToVillager();
     var canSearch = isOrthogonalAdjacentToSearchTarget();
     if (actionButtons) actionButtons.classList.add('hidden');
@@ -751,6 +764,7 @@
       showJobs = false;
       showCompany = false;
       hide(dialogueOverlay);
+      setIsTalking(false);
       drawMap();
       updateActionButtons();
       if (mapHint) mapHint.textContent = '';
@@ -761,6 +775,7 @@
       showCompany = false;
       currentVillager = null;
       hide(dialogueOverlay);
+      setIsTalking(false);
     }
     function appendCloseButton() {
       var closeBtn = document.createElement('button');
@@ -784,6 +799,7 @@
       dialogueChoices.appendChild(contactBtn);
       appendCloseButton();
       show(dialogueOverlay);
+      setIsTalking(true);
     }
     function renderToronView() {
       dialogueName.textContent = 'とろん君';
@@ -796,6 +812,7 @@
       dialogueChoices.innerHTML = '';
       appendCloseButton();
       show(dialogueOverlay);
+      setIsTalking(true);
     }
     if (showToron) {
       renderToronView();
@@ -830,6 +847,7 @@
         showToron = false;
         if (companyBody) companyBody.textContent = '屋号：便利屋とろんぷらす\n住所：岐阜県羽島市竹鼻町3006-1\n代表：鉄谷松雄\n\nお問い合わせはLINEからお願いします\n※営業電話はお断りしております\n\n岐阜市周辺対応\n営業時間：8:00〜17:00\n\n地域密着で困りごとを解決する便利屋サービスです。';
         show(companyOverlay);
+        setIsTalking(true);
       });
       dialogueChoices.appendChild(showJobsBtn);
       dialogueChoices.appendChild(companyBtn);
@@ -858,6 +876,7 @@
     }
     appendCloseButton();
     show(dialogueOverlay);
+    setIsTalking(true);
   }
 
   function getExpToNextLevel() {
@@ -1235,9 +1254,13 @@
           var closeBtn = document.createElement('button');
           closeBtn.type = 'button';
           closeBtn.textContent = '▶ 閉じる';
-          closeBtn.addEventListener('click', function () { hide(dialogueOverlay); });
+          closeBtn.addEventListener('click', function () {
+            hide(dialogueOverlay);
+            setIsTalking(false);
+          });
           dialogueChoices.appendChild(closeBtn);
           show(dialogueOverlay);
+          setIsTalking(true);
         }
         return;
       }
@@ -1248,9 +1271,13 @@
         var closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.textContent = '▶ 閉じる';
-        closeBtn.addEventListener('click', function () { hide(dialogueOverlay); });
+        closeBtn.addEventListener('click', function () {
+          hide(dialogueOverlay);
+          setIsTalking(false);
+        });
         dialogueChoices.appendChild(closeBtn);
         show(dialogueOverlay);
+        setIsTalking(true);
       }
     });
 
@@ -1284,6 +1311,7 @@
     if (btnCloseCompany) btnCloseCompany.addEventListener('click', function () {
       showCompany = false;
       hide(companyOverlay);
+      setIsTalking(false);
     });
 
     var btnStart = document.getElementById('btn-start');
@@ -1300,9 +1328,13 @@
           var closeBtn = document.createElement('button');
           closeBtn.type = 'button';
           closeBtn.textContent = '▶ 閉じる';
-          closeBtn.addEventListener('click', function () { hide(dialogueOverlay); });
+          closeBtn.addEventListener('click', function () {
+            hide(dialogueOverlay);
+            setIsTalking(false);
+          });
           dialogueChoices.appendChild(closeBtn);
           show(dialogueOverlay);
+          setIsTalking(true);
           return;
         }
       }
