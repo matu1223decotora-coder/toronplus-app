@@ -317,7 +317,9 @@
   function ensureAttackSe() {
     if (attackSe) return;
     attackSe = new Audio(ATTACK_SE_SRC);
+    attackSe.preload = 'auto';
     attackSe.volume = ATTACK_SE_VOLUME;
+    try { attackSe.load(); } catch (e) { /* ignore */ }
   }
 
   function playAttackSe() {
@@ -326,7 +328,17 @@
     try { attackSe.currentTime = 0; } catch (e) { /* ignore */ }
     var p = attackSe.play();
     if (p && typeof p.catch === 'function') {
-      p.catch(function () { /* 未ロード等は無視 */ });
+      p.catch(function () {
+        // 端末依存で同一インスタンス再生が失敗する場合に備えて再生成して再試行
+        attackSe = new Audio(ATTACK_SE_SRC);
+        attackSe.preload = 'auto';
+        attackSe.volume = ATTACK_SE_VOLUME;
+        try { attackSe.currentTime = 0; } catch (e) { /* ignore */ }
+        var retry = attackSe.play();
+        if (retry && typeof retry.catch === 'function') {
+          retry.catch(function () { /* 最終的に失敗した場合は無視 */ });
+        }
+      });
     }
   }
 
