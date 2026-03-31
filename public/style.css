@@ -457,15 +457,37 @@ body.game-page {
     /* 十字キー（右下固定）のおおよその高さ分を確保して見切れ/被りを防ぐ */
     --game-canvas-safe-bottom: 180px;
   }
-  /* `overflow:hidden` でキャンバスが切れないように（縮小される設計のため問題になりにくい） */
+  /* 親を画面いっぱいにして、キャンバスだけを縮小して中央表示する */
   .map-wrap {
-    overflow: visible;
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    z-index: 0;
+    /* 右下の十字キーに被らないよう下余白を確保 */
+    padding-bottom: var(--game-canvas-safe-bottom);
   }
+  /* キャンバスの上にUIを表示 */
+  .map-ui { position: relative; z-index: 1; }
+  .player-status { z-index: 2; }
   .dpad-wrap {
     position: fixed;
     right: 12px;
     bottom: 12px;
     z-index: 50;
+  }
+
+  #game-canvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    /* 640x640 のような正方形でも歪ませない */
+    aspect-ratio: 1 / 1;
   }
 }
 

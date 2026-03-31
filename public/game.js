@@ -226,8 +226,9 @@
   function hide(el) { if (el) el.classList.add('hidden'); }
 
   // ===== BGM（ゲーム画面のみ）=====
-  // ファイルは `public/bgm.mp3` を配置してください（相対パスは public/ 起点）
-  var BGM_SRC = 'bgm.mp3';
+  // ファイルは `public/bgm.mp3` を配置してください
+  // （index.html から見たサイトルートにある想定。`/bgm.mp3` は先頭`/`込み）
+  var BGM_SRC = '/bgm.mp3';
   var bgm = null;
   var bgmWantsToPlay = false; // 再生許可が降りない場合のリトライ用
   var bgmPlayRetried = false; // 何度もイベントを貼らない
@@ -286,8 +287,6 @@
     if (!mapScreen) return;
     if (mapScreen.classList.contains('hidden')) {
       stopBgm();
-    } else {
-      if (bgmWantsToPlay) startBgm();
     }
   }
 
@@ -1122,6 +1121,13 @@
 
     // 初期状態がタイトル画面なら停止（念のため）
     syncBgmWithScreen();
+
+    // ページ離脱・画面非表示で停止（ブラウザ制限対策の保険）
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stopBgm();
+    });
+    window.addEventListener('pagehide', stopBgm);
+    window.addEventListener('beforeunload', stopBgm);
 
     // タイトルへ戻る/戻ったとき（map-screen が hidden になったとき）に停止
     // （現状は title と map を hidden/unhidden で切り替えるため class 監視で対応）
