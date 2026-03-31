@@ -312,21 +312,12 @@
   // `public/attack.mp3` を配置してください
   var ATTACK_SE_SRC = 'attack.mp3';
   var ATTACK_SE_VOLUME = 0.4;
-  var attackSe = null;
-
-  function ensureAttackSe() {
-    if (attackSe) return;
-    attackSe = new Audio(ATTACK_SE_SRC);
-    attackSe.preload = 'auto';
-    attackSe.volume = ATTACK_SE_VOLUME;
-    try { attackSe.load(); } catch (e) { /* ignore */ }
-  }
 
   function playAttackSe() {
-    ensureAttackSe();
-    if (!attackSe) return;
-    try { attackSe.currentTime = 0; } catch (e) { /* ignore */ }
-    var p = attackSe.play();
+    // 攻撃時に都度インスタンスを作る（連打時の再生ずれを防ぐ）
+    var se = new Audio(ATTACK_SE_SRC);
+    se.volume = ATTACK_SE_VOLUME;
+    var p = se.play();
     if (p && typeof p.catch === 'function') {
       p.catch(function () { /* 再生失敗時は無視 */ });
     }
@@ -1171,9 +1162,6 @@
 
   function init() {
     bindElements();
-    // 攻撃SEは開始前に事前ロード（初回遅延を減らす）
-    ensureAttackSe();
-
     // 初期状態がタイトル画面なら停止（念のため）
     syncBgmWithScreen();
 
