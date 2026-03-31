@@ -1199,7 +1199,7 @@
     endingCtaTimer = setTimeout(function () {
       endingCtaTimer = null;
       if (endingCta) show(endingCta);
-    }, 5000);
+    }, 12000);
   }
 
   function startGame() {

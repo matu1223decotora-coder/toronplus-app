@@ -935,7 +935,7 @@ body.game-page {
   position: absolute;
   bottom: -30%;
   text-align: center;
-  animation: endingRollUp 8s linear forwards;
+  animation: endingRollUp 16s linear forwards;
 }
 
 .ending-roll p {
