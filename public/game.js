@@ -953,12 +953,12 @@
       var killSe = new Audio('kill.mp3');
       killSe.volume = 0.5;
       killSe.play().catch(function () { /* ignore */ });
-      // 0.4秒後にフィールドBGMを再開
+      // 0.8秒後にフィールドBGMを再開（撃破SEの余韻を確保）
       if (killBgmResumeTimer) clearTimeout(killBgmResumeTimer);
       killBgmResumeTimer = setTimeout(function () {
         killBgmResumeTimer = null;
         playFieldBgm();
-      }, 400);
+      }, 800);
     }
     currentBattle.lastEnemyHp = newHp;
   }
