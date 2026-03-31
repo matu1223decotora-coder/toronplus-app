@@ -212,6 +212,28 @@
     '庭木剪定',
     'その他なんでもご相談下さい'
   ];
+  var ENDING_TEXTS = [
+    '今日もとろん村の困りごとは解決した…',
+    '',
+    'でも現実のあなたの困りごとは？',
+    '',
+    'とろんぷらすは地域密着の便利屋サービスです',
+    '',
+    '草刈り・剪定',
+    'エアコン掃除',
+    '不用品回収',
+    'ハウスクリーニング',
+    '車の季節タイヤ出張交換',
+    '物置・倉庫整理',
+    '買い物代行',
+    '家具の移動',
+    '',
+    'その他、どんな小さな困りごとでもご相談ください',
+    '',
+    '相談・見積りは無料です',
+    '',
+    'あなたの街の便利屋として、すぐに対応します'
+  ];
 
   // --- DOM（後で取得） ---
   var canvas, ctx;
@@ -1166,6 +1188,17 @@
     show(clearOverlay);
   }
 
+  function renderEndingTexts() {
+    if (!endingRoll) return;
+    endingRoll.innerHTML = '';
+    ENDING_TEXTS.forEach(function (t, i) {
+      var p = document.createElement('p');
+      p.textContent = t;
+      p.setAttribute('data-index', String(i));
+      endingRoll.appendChild(p);
+    });
+  }
+
   function onQuestClearCountChanged() {
     if (questClearCount >= 3) {
       showEndingOverlay();
@@ -1193,6 +1226,7 @@
     if (endingCta) hide(endingCta);
     if (endingRoll) {
       endingRoll.style.animation = 'none';
+      endingRoll.style.animationDuration = '40s';
       endingRoll.offsetHeight;
       endingRoll.style.animation = '';
     }
@@ -1268,6 +1302,7 @@
     endingCta = document.getElementById('ending-cta');
     btnEndingLine = document.getElementById('btn-ending-line');
     btnEndingRequest = document.getElementById('btn-ending-request');
+    renderEndingTexts();
   }
 
   function init() {
