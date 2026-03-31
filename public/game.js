@@ -197,6 +197,7 @@
   var currentNpcId = 0;
   var currentVillager = null;
   var currentBattle = null;
+  var questClearCount = 0;
   var showJobs = false;
   var showCompany = false;
   var showToron = false;
@@ -1050,13 +1051,12 @@
       nextBtn.textContent = '▶ つづける';
       nextBtn.addEventListener('click', function () {
         hide(battleOverlay);
-        completedQuests[currentBattle.questId] = true;
+        if (!completedQuests[currentBattle.questId]) {
+          completedQuests[currentBattle.questId] = true;
+          if (incrementQuestClearCount()) return;
+        }
         activeQuest = 0;
         drawMap();
-        if (hasClearedAllQuests()) {
-          showEndingOverlay();
-          return;
-        }
         showClearOverlay(currentBattle.questId);
       });
       battleSubCommands.appendChild(nextBtn);
@@ -1166,8 +1166,17 @@
     show(clearOverlay);
   }
 
-  function hasClearedAllQuests() {
-    return !!completedQuests[1] && !!completedQuests[2] && !!completedQuests[3];
+  function onQuestClearCountChanged() {
+    if (questClearCount >= 3) {
+      showEndingOverlay();
+      return true;
+    }
+    return false;
+  }
+
+  function incrementQuestClearCount() {
+    questClearCount += 1;
+    return onQuestClearCountChanged();
   }
 
   function showEndingOverlay() {
