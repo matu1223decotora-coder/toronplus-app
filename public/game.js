@@ -965,6 +965,9 @@
     }, 800);
 
     if (currentBattle.enemyHp <= 0) {
+      var killSe = new Audio('/kill.mp3');
+      killSe.volume = 0.5;
+      killSe.play().catch(function () { /* ignore */ });
       if (battleEnemySprite) battleEnemySprite.classList.add('dead');
       var expGained = EXP_PER_MONSTER[currentBattle.questId] || 10;
       var levelsGained = addExpAndCheckLevelUp(expGained);
