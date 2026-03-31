@@ -225,69 +225,88 @@
   function show(el) { if (el) el.classList.remove('hidden'); }
   function hide(el) { if (el) el.classList.add('hidden'); }
 
-  // ===== BGM（ゲーム画面のみ）=====
-  // ファイルは `public/bgm.mp3` を配置してください
-  // （index.html から見たサイトルートにある想定。`/bgm.mp3` は先頭`/`込み）
-  var BGM_SRC = '/bgm.mp3';
-  var bgm = null;
-  var bgmWantsToPlay = false; // 再生許可が降りない場合のリトライ用
-  var bgmPlayRetried = false; // 何度もイベントを貼らない
+  // ===== BGM（フィールド/バトル切替）=====
+  // ファイルは `public/bgm.mp3` と `public/battle.mp3` を配置してください
+  var FIELD_BGM_SRC = 'bgm.mp3';
+  var BATTLE_BGM_SRC = 'battle.mp3';
+  var fieldBgm = null;
+  var battleBgm = null;
+  var bgmTarget = 'none'; // 'field' | 'battle' | 'none'
+  var bgmRetryBound = false;
 
   function ensureBgm() {
-    if (bgm) return;
-    bgm = new Audio(BGM_SRC);
-    bgm.loop = true;
-    bgm.volume = 0.2; // 小音量
+    if (!fieldBgm) {
+      fieldBgm = new Audio(FIELD_BGM_SRC);
+      fieldBgm.loop = true;
+      fieldBgm.volume = 0.2;
+    }
+    if (!battleBgm) {
+      battleBgm = new Audio(BATTLE_BGM_SRC);
+      battleBgm.loop = true;
+      battleBgm.volume = 0.2;
+    }
   }
 
-  function retryBgmAfterUserGesture() {
-    if (bgmPlayRetried) return;
-    bgmPlayRetried = true;
-    var onFirstUser = function () {
-      if (!bgmWantsToPlay) return;
-      ensureBgm();
-      if (bgm && typeof bgm.play === 'function') {
-        bgm.play().catch(function () { /* それでも失敗する場合は諦める */ });
-      }
-      window.removeEventListener('touchstart', onFirstUser);
-      window.removeEventListener('click', onFirstUser);
+  function stopAllBgm() {
+    if (fieldBgm) {
+      fieldBgm.pause();
+      try { fieldBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    }
+    if (battleBgm) {
+      battleBgm.pause();
+      try { battleBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    }
+  }
+
+  function bindBgmRetryAfterUserGesture() {
+    if (bgmRetryBound) return;
+    bgmRetryBound = true;
+    var retry = function () {
+      bgmRetryBound = false;
+      if (bgmTarget === 'field') playFieldBgm();
+      if (bgmTarget === 'battle') playBattleBgm();
     };
-    // 一度だけ
-    window.addEventListener('touchstart', onFirstUser, { passive: true });
-    window.addEventListener('click', onFirstUser);
+    window.addEventListener('touchstart', retry, { once: true, passive: true });
+    window.addEventListener('click', retry, { once: true });
   }
 
-  function startBgm() {
-    bgmWantsToPlay = true;
+  function playFieldBgm() {
+    bgmTarget = 'field';
     ensureBgm();
-    if (!bgm) return;
-
-    // 既に再生中なら多重に play() しない
-    if (typeof bgm.paused === 'boolean' && bgm.paused === false) return;
-
-    var p = bgm.play();
+    if (!fieldBgm) return;
+    // 同時再生禁止: 先に全停止
+    stopAllBgm();
+    try { fieldBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    var p = fieldBgm.play();
     if (p && typeof p.catch === 'function') {
-      p.catch(function () {
-        // 自動再生がブラウザ制限で弾かれた場合、次のユーザー操作で再試行
-        retryBgmAfterUserGesture();
-      });
+      p.catch(function () { bindBgmRetryAfterUserGesture(); });
+    }
+  }
+
+  function playBattleBgm() {
+    bgmTarget = 'battle';
+    ensureBgm();
+    if (!battleBgm) return;
+    // 同時再生禁止: 先に全停止
+    stopAllBgm();
+    try { battleBgm.currentTime = 0; } catch (e) { /* ignore */ }
+    var p = battleBgm.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function () { bindBgmRetryAfterUserGesture(); });
     }
   }
 
   function stopBgm() {
-    bgmWantsToPlay = false;
-    bgmPlayRetried = false;
-    if (!bgm) return;
-    bgm.pause();
-    try { bgm.currentTime = 0; } catch (e) { /* ignore */ }
+    bgmTarget = 'none';
+    stopAllBgm();
   }
 
   function syncBgmWithScreen() {
-    // map-screen が hidden の間はタイトル画面扱いとして停止
+    // タイトル画面の間、またはゲーム画面が隠れている間は停止
+    // （タイトルに戻る導線が将来的に増えても止まるように title-screen も監視）
     if (!mapScreen) return;
-    if (mapScreen.classList.contains('hidden')) {
-      stopBgm();
-    }
+    if (mapScreen.classList.contains('hidden')) { stopBgm(); return; }
+    if (titleScreen && !titleScreen.classList.contains('hidden')) { stopBgm(); return; }
   }
 
   function getVillagerAt(r, c) {
@@ -883,6 +902,7 @@
     battleSubCommands.innerHTML = '';
     showPlayerTurn();
     updatePlayerStatusDisplay();
+    playBattleBgm();
     show(battleOverlay);
   }
 
@@ -943,6 +963,7 @@
         hide(battleOverlay);
         completedQuests[currentBattle.questId] = true;
         activeQuest = 0;
+        playFieldBgm();
         drawMap();
         showClearOverlay(currentBattle.questId);
       });
@@ -1057,7 +1078,7 @@
     hide(titleScreen);
     show(mapScreen);
     // タイトル画面では再生せず、ゲーム開始時に再生
-    startBgm();
+    playFieldBgm();
     if (canvas) {
       canvas.width = CANVAS_WIDTH;
       canvas.height = CANVAS_HEIGHT;
@@ -1186,6 +1207,7 @@
         if (cmd === 'work') doWork();
         if (cmd === 'run') {
           hide(battleOverlay);
+          playFieldBgm();
           battleMsg.textContent = '';
           battleCommands.classList.remove('hidden');
           battleQuizChoices.classList.add('hidden');
