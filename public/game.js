@@ -109,6 +109,10 @@
     { id: 4, row: 11, col: 8, name: '村人', text: '家の中に不用品がたまってしまって…', quest: 2, problemText: '不用品が山積みで大変なんだ…', spriteIndex: 0, isMayor: false, hasQuest: true },
     { id: 5, row: 17, col: 8, name: '村人', text: 'エアコンがカビくさくて困ってる…', quest: 3, problemText: 'エアコンがカビだらけで困ってるんだ', spriteIndex: 1, isMayor: false, hasQuest: true }
   ];
+  /** 村人の足元タイル座標（VILLAGERS と常に一致・描画と通行判定の共通源） */
+  var npcs = VILLAGERS.map(function (v) {
+    return { row: v.row, col: v.col };
+  });
   // 看板の論理座標（タイル row,col）— 描画・近接判定・調べると一致
   // 入口看板は草マス (1,9)（行1列10の道の西隣）。案内看板 (9,11) は変更しない
   var SIGN_AT = { '1,9': 'entrance', '9,11': 'guide' };
@@ -473,9 +477,18 @@
     return mapData[r][c] === TILE_GATE;
   }
 
+  function isNpc(r, c) {
+    for (var i = 0; i < npcs.length; i++) {
+      var npc = npcs[i];
+      if (npc.row === r && npc.col === c) return true;
+    }
+    return false;
+  }
+
   function canWalk(r, c) {
     if (r < 0 || r >= MAP_ROWS || c < 0 || c >= MAP_COLS) return false;
     if (isFence(r, c)) return false;
+    if (isNpc(r, c)) return false;
     var base = mapData[r][c];
     if (base === TILE_WALL || base === TILE_TREE || base === TILE_WATER || base === TILE_HOUSE || base === TILE_PLAYER_HOUSE) return false;
     return true;
