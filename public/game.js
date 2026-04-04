@@ -461,8 +461,21 @@
     return mapData[r][c];
   }
 
+  function isFence(r, c) {
+    if (typeof FENCE_TILE_COORDS !== 'undefined' && FENCE_TILE_COORDS && FENCE_TILE_COORDS.length > 0) {
+      for (var i = 0; i < FENCE_TILE_COORDS.length; i++) {
+        var tile = FENCE_TILE_COORDS[i];
+        if (tile.row === r && tile.col === c) return true;
+      }
+      return false;
+    }
+    if (r < 0 || r >= MAP_ROWS || c < 0 || c >= MAP_COLS) return false;
+    return mapData[r][c] === TILE_GATE;
+  }
+
   function canWalk(r, c) {
     if (r < 0 || r >= MAP_ROWS || c < 0 || c >= MAP_COLS) return false;
+    if (isFence(r, c)) return false;
     var base = mapData[r][c];
     if (base === TILE_WALL || base === TILE_TREE || base === TILE_WATER || base === TILE_HOUSE || base === TILE_PLAYER_HOUSE) return false;
     return true;

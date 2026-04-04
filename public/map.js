@@ -4,7 +4,7 @@
  * ※ マップデータはこのファイルのみで管理する。
  * ※ game.js は mapData を読み込んで描画するだけ。このファイルを編集しないこと。
  *
- * タイル: 0=草, 1=壁/箱, 2=木, 3=道, 4=中央, 5=池, 6=家, 7=プレイヤー家, 8=門, 9=畑
+ * タイル: 0=草, 1=壁/箱, 2=木, 3=道, 4=中央, 5=池, 6=家, 7=プレイヤー家, 8=門/柵（通行不可）, 9=畑
  * 編集ルール: 上エリア＝行 index 0〜9（南北の主道・プラザ行10より上）は原則変更禁止。下側のみ行10以降を調整可。
  * 畑: 行12〜14・列15〜17。外周木＋北西木箱(1)。入り口(12,14)のみ草。
  * 看板の論理座標は game.js の SIGN_AT（マップタイルとは別）。
@@ -59,6 +59,16 @@
     [8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8]
   ];
 
+  /** 柵（TILE_GATE）マスの座標。mapData と同期（通行不可判定用） */
+  var FENCE_TILE_COORDS = [];
+  for (var fr = 0; fr < MAP_ROWS; fr++) {
+    for (var fc = 0; fc < MAP_COLS; fc++) {
+      if (mapData[fr][fc] === TILE_GATE) {
+        FENCE_TILE_COORDS.push({ row: fr, col: fc });
+      }
+    }
+  }
+
   // プレイヤー家タイル（mapData の 7 と連動、参照用）— 1マス
   var PLAYER_HOUSE_TILES = [[7,6]];
 
@@ -82,5 +92,6 @@
   global.MAP_ROWS = MAP_ROWS;
   global.MAP_COLS = MAP_COLS;
   global.mapData = mapData;
+  global.FENCE_TILE_COORDS = FENCE_TILE_COORDS;
   global.PLAYER_HOUSE_TILES = PLAYER_HOUSE_TILES;
 })(typeof window !== 'undefined' ? window : this);
