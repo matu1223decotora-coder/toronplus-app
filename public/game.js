@@ -201,7 +201,7 @@
   var showJobs = false;
   var showCompany = false;
   var showToron = false;
-  var mode = 'field'; // 'field' | 'talk' | 'inspect' | 'battle' | 'ending'
+  var mode = 'title'; // 'title' | 'field' | 'talk' | 'inspect' | 'battle' | 'ending'
   var JOBS = [
     'ハウスクリーニング',
     '草刈り',
@@ -245,14 +245,56 @@
   var battleMsg, battleCommands, battleQuizChoices, battleSubCommands;
   var clearOverlay, clearMessage, btnLine, btnClearClose;
   var companyOverlay, companyBody, btnCloseCompany;
-  var endingOverlay, endingRoll, endingCta, btnEndingLine, btnEndingRequest;
+  var endingOverlay, endingRoll, endingCta, btnEndingLine, btnEndingTitle;
   var endingCtaTimer = null;
 
   function show(el) { if (el) el.classList.remove('hidden'); }
   function hide(el) { if (el) el.classList.add('hidden'); }
+  function resetGameProgress() {
+    playerRow = 9;
+    playerCol = 7;
+    playerFacing = 'down';
+    activeQuest = 0;
+    completedQuests = {};
+    playerHp = 100;
+    playerHpMax = 100;
+    playerLevel = 1;
+    playerExp = 0;
+    currentNpcId = 0;
+    currentVillager = null;
+    currentBattle = null;
+    questClearCount = 0;
+    showJobs = false;
+    showCompany = false;
+    showToron = false;
+    if (endingCta) hide(endingCta);
+    if (mapHint) mapHint.textContent = '';
+  }
+
   function setMode(nextMode) {
     mode = nextMode || 'field';
     if (mode !== 'ending' && endingOverlay) hide(endingOverlay);
+    if (mode === 'title') {
+      if (endingCtaTimer) {
+        clearTimeout(endingCtaTimer);
+        endingCtaTimer = null;
+      }
+      hide(endingOverlay);
+      hide(mapScreen);
+      hide(dialogueOverlay);
+      hide(companyOverlay);
+      hide(battleOverlay);
+      hide(clearOverlay);
+      if (actionButtons) actionButtons.classList.add('hidden');
+      if (btnTalk) btnTalk.classList.add('hidden');
+      if (btnSearch) btnSearch.classList.add('hidden');
+      if (btnCancelAction) btnCancelAction.classList.add('hidden');
+      stopBgm();
+      resetGameProgress();
+      updatePlayerStatusDisplay();
+      if (titleScreen) show(titleScreen);
+      return;
+    }
     if (mode !== 'field') {
       if (actionButtons) actionButtons.classList.add('hidden');
       if (btnTalk) btnTalk.classList.add('hidden');
@@ -1237,8 +1279,13 @@
   }
 
   function startGame() {
+    if (endingCtaTimer) {
+      clearTimeout(endingCtaTimer);
+      endingCtaTimer = null;
+    }
     hide(titleScreen);
     show(mapScreen);
+    hide(endingOverlay);
     // タイトル画面では再生せず、ゲーム開始時に再生
     playFieldBgm();
     if (canvas) {
@@ -1248,8 +1295,8 @@
     }
     drawMap();
     updatePlayerPos();
-    updateActionButtons();
     updatePlayerStatusDisplay();
+    setMode('field');
   }
 
   function bindElements() {
@@ -1301,7 +1348,7 @@
     endingRoll = document.getElementById('ending-roll');
     endingCta = document.getElementById('ending-cta');
     btnEndingLine = document.getElementById('btn-ending-line');
-    btnEndingRequest = document.getElementById('btn-ending-request');
+    btnEndingTitle = document.getElementById('btn-ending-title');
     renderEndingTexts();
   }
 
@@ -1399,8 +1446,11 @@
     });
 
     if (btnLine) btnLine.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
-    if (btnEndingLine) btnEndingLine.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
-    if (btnEndingRequest) btnEndingRequest.addEventListener('click', function () { window.open(LINE_URL, '_blank'); });
+    if (btnEndingLine) btnEndingLine.addEventListener('click', function () {
+      if (LINE_URL && LINE_URL !== '#') window.location.href = LINE_URL;
+      else window.open(LINE_URL, '_blank');
+    });
+    if (btnEndingTitle) btnEndingTitle.addEventListener('click', function () { setMode('title'); });
     if (btnClearClose) btnClearClose.addEventListener('click', function () {
       hide(clearOverlay);
       setMode('field');
